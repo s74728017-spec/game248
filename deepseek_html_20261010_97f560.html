@@ -1,0 +1,1508 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>🎁 Case Simulator Pro</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{min-height:100vh;background:linear-gradient(180deg,#eef2ff 0%,#f8fafc 40%,#f1f5f9 100%);color:#1e293b;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;padding:16px;-webkit-font-smoothing:antialiased}
+  button{font-family:inherit}input{font-family:inherit}
+
+  .auth-screen{position:fixed;inset:0;z-index:300;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at center,#c7d2fe,#f8fafc 70%);padding:20px}
+  .auth-screen.hidden{display:none}
+  .auth-card{background:#fff;border-radius:22px;padding:30px;width:100%;max-width:380px;box-shadow:0 24px 70px rgba(15,23,42,.18);display:flex;flex-direction:column;gap:14px}
+  .auth-card h1{font-size:24px;font-weight:900;text-align:center;color:#7c3aed;letter-spacing:1px}
+  .auth-tabs{display:flex;gap:6px;background:#f1f5f9;border-radius:12px;padding:5px}
+  .auth-tabs button{flex:1;padding:10px;border:none;background:transparent;border-radius:9px;cursor:pointer;font-size:13px;font-weight:800;color:#64748b;transition:.15s}
+  .auth-tabs button.active{background:#fff;color:#7c3aed;box-shadow:0 2px 8px rgba(15,23,42,.08)}
+  .auth-card input{padding:13px 16px;border-radius:11px;border:1px solid #e2e8f0;background:#f8fafc;font-size:14px;font-weight:700;color:#1e293b;outline:none;transition:.15s}
+  .auth-card input:focus{border-color:#7c3aed;background:#fff;box-shadow:0 0 0 4px rgba(124,58,237,.13)}
+  .auth-submit{padding:14px;border:none;border-radius:11px;cursor:pointer;background:linear-gradient(135deg,#8b5cf6,#ec4899);color:#fff;font-size:14px;font-weight:900;letter-spacing:1.5px;text-transform:uppercase;box-shadow:0 8px 24px rgba(139,92,246,.4);transition:.15s}
+  .auth-submit:hover{transform:translateY(-1px);box-shadow:0 12px 30px rgba(236,72,153,.5)}
+  .auth-error{min-height:18px;font-size:12.5px;font-weight:800;color:#dc2626;text-align:center}
+  .auth-hint{font-size:11px;color:#94a3b8;text-align:center;font-weight:700}
+
+  .app{max-width:1080px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+  .app.hidden{display:none}
+
+  .topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:12px 18px;box-shadow:0 4px 18px rgba(15,23,42,.06)}
+  .profile{display:flex;align-items:center;gap:12px}
+  .avatar{width:46px;height:46px;border-radius:13px;font-size:23px;background:linear-gradient(135deg,#a78bfa,#f472b6);display:grid;place-items:center;box-shadow:0 6px 20px rgba(167,139,250,.5)}
+  .nick{font-weight:800;font-size:17px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .title-badge{display:none;font-size:11.5px;font-weight:800;letter-spacing:.4px;padding:3px 10px;border-radius:999px;border:1px solid currentColor;background:#fff}
+  .title-badge.on{display:inline-block}
+  .sub{font-size:11.5px;color:#94a3b8;margin-top:2px}
+
+  .wallets{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .wallet{display:flex;align-items:center;gap:6px;font-size:15px;font-weight:800;padding:8px 14px;border-radius:12px;border:1px solid}
+  .wallet.coins{background:#fef9c3;border-color:#fde047;color:#a16207}
+  .wallet.gems{background:#dbeafe;border-color:#93c5fd;color:#1d4ed8}
+  .wallet.cups{background:#ffedd5;border-color:#fdba74;color:#c2410c}
+  .wallet .ico{font-size:17px}
+  .icon-btn{background:#fff;border:1px solid #e2e8f0;color:#475569;width:38px;height:38px;border-radius:11px;cursor:pointer;font-size:16px;transition:.15s}
+  .icon-btn:hover{background:#f1f5f9}
+
+  .tabs{display:flex;gap:6px;background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:6px;box-shadow:0 4px 18px rgba(15,23,42,.06);overflow-x:auto}
+  .tab-btn{flex:1;min-width:110px;padding:11px 14px;border:none;background:transparent;border-radius:10px;cursor:pointer;font-size:13px;font-weight:800;color:#64748b;transition:.15s;white-space:nowrap}
+  .tab-btn.active{background:linear-gradient(135deg,#8b5cf6,#ec4899);color:#fff;box-shadow:0 4px 14px rgba(139,92,246,.35)}
+
+  .tab-panel{display:none;flex-direction:column;gap:14px}
+  .tab-panel.active{display:flex}
+
+  .card{background:#fff;border:1px solid #e2e8f0;border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:12px;box-shadow:0 4px 18px rgba(15,23,42,.06)}
+  .panel-title{font-size:15px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;color:#7c3aed;display:flex;align-items:center;gap:9px;width:100%}
+  .panel-title::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,#c4b5fd,transparent)}
+  .panel-title.small{font-size:13px;color:#64748b}
+  .panel-title.small::after{background:linear-gradient(90deg,#cbd5e1,transparent)}
+
+  .case-panel{background:#fff;border:1px solid #e2e8f0;border-radius:20px;padding:22px;display:flex;flex-direction:column;gap:18px;align-items:center;box-shadow:0 4px 18px rgba(15,23,42,.06)}
+  .case-preview{width:200px;height:200px;border-radius:26px;background:linear-gradient(145deg,#a78bfa,#7c3aed 45%,#4c1d95);display:grid;place-items:center;font-size:100px;box-shadow:0 18px 50px rgba(124,58,237,.5), inset 0 -12px 30px rgba(0,0,0,.25), inset 0 12px 30px rgba(255,255,255,.2);position:relative;transition:transform .2s}
+  .case-preview::before{content:'';position:absolute;inset:0;border-radius:26px;background:linear-gradient(180deg,rgba(255,255,255,.35),transparent 45%);pointer-events:none}
+  .case-preview:hover{transform:translateY(-4px) scale(1.02)}
+
+  .open-btn{min-width:290px;padding:17px 42px;border:none;border-radius:14px;cursor:pointer;font-size:16px;font-weight:900;letter-spacing:1.6px;color:#fff;text-transform:uppercase;background:linear-gradient(135deg,#8b5cf6,#ec4899 55%,#f59e0b);background-size:200% 200%;box-shadow:0 10px 30px rgba(139,92,246,.4), inset 0 1px 0 rgba(255,255,255,.35);transition:transform .12s, box-shadow .2s, filter .2s;animation:btnFlow 5s ease infinite}
+  @keyframes btnFlow{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+  .open-btn:hover:not(:disabled){transform:translateY(-2px) scale(1.02)}
+  .open-btn:disabled{filter:grayscale(.5) brightness(.9);cursor:not-allowed;animation:none}
+
+  .result{min-height:0;display:flex;justify-content:center;width:100%}
+  .result-card{display:none;align-items:center;gap:16px;flex-wrap:wrap;justify-content:center;padding:16px 26px;border-radius:16px;border:2px solid;background:#fff;animation:pop .45s cubic-bezier(.2,1.5,.4,1);text-align:center;box-shadow:0 8px 30px rgba(15,23,42,.1)}
+  .result-card.show{display:flex}
+  @keyframes pop{0%{transform:scale(.6);opacity:0}100%{transform:scale(1);opacity:1}}
+  .rc-icon{font-size:46px}
+  .rc-info{text-align:left}
+  .rc-rarity{font-size:19px;font-weight:900;letter-spacing:1px;text-transform:uppercase}
+  .rc-coins{font-size:15px;color:#a16207;font-weight:800;margin-top:4px}
+  .rc-title{margin-top:6px;font-size:13px;font-weight:800;padding:4px 12px;border-radius:999px;display:inline-block;border:1px solid currentColor;background:#fff}
+  .rc-color{margin-top:6px;font-size:13px;font-weight:800;padding:4px 12px;border-radius:999px;display:inline-block;border:1px solid #94a3b8;background:#f8fafc}
+
+  .reveal-overlay{position:fixed;inset:0;z-index:100;display:none;align-items:center;justify-content:center;flex-direction:column;background:radial-gradient(circle at center, rgba(255,255,255,.98), rgba(255,255,255,.9));backdrop-filter:blur(8px);cursor:pointer;user-select:none;overflow:hidden}
+  .reveal-overlay.show{display:flex;animation:revealFade .2s ease}
+  .reveal-overlay.locked{cursor:default}
+  @keyframes revealFade{from{opacity:0}to{opacity:1}}
+  .reveal-bg{position:absolute;inset:0;background:radial-gradient(circle at center, var(--c,#7c3aed), transparent 65%);opacity:.18;transition:opacity .3s;pointer-events:none}
+  .reveal-inner{display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;text-align:center;position:relative;z-index:2;padding:0 20px}
+  .reveal-inner.shake{animation:shakeAnim .45s ease}
+  @keyframes shakeAnim{0%,100%{transform:translateX(0)}20%{transform:translateX(-16px)}40%{transform:translateX(14px)}60%{transform:translateX(-10px)}80%{transform:translateX(8px)}}
+  .reveal-icon{font-size:120px;line-height:1;margin-bottom:18px;filter:drop-shadow(0 10px 32px currentColor);animation:revealPop .55s cubic-bezier(.2,1.7,.4,1)}
+  .reveal-text{font-size:78px;font-weight:900;letter-spacing:5px;text-transform:uppercase;line-height:1.05;text-shadow:0 4px 30px currentColor, 0 2px 0 rgba(255,255,255,.9);animation:revealPop .55s cubic-bezier(.2,1.7,.4,1);word-break:break-word}
+  @keyframes revealPop{0%{transform:scale(.2) rotate(-8deg);opacity:0}55%{transform:scale(1.18) rotate(3deg);opacity:1}100%{transform:scale(1) rotate(0);opacity:1}}
+  .reveal-inner.win .reveal-icon,.reveal-inner.win .reveal-text{animation:winPop .75s cubic-bezier(.2,1.8,.4,1)}
+  @keyframes winPop{0%{transform:scale(.2) rotate(-12deg);opacity:0}45%{transform:scale(1.28) rotate(5deg);opacity:1}70%{transform:scale(.95) rotate(-2deg)}100%{transform:scale(1) rotate(0)}}
+  .rays{position:absolute;top:50%;left:50%;width:1200px;height:1200px;transform:translate(-50%,-50%);pointer-events:none;color:currentColor;background:conic-gradient(from 0deg,currentColor 0 6deg,transparent 6deg 30deg,currentColor 30deg 36deg,transparent 36deg 60deg,currentColor 60deg 66deg,transparent 66deg 90deg,currentColor 90deg 96deg,transparent 96deg 120deg,currentColor 120deg 126deg,transparent 126deg 150deg,currentColor 150deg 156deg,transparent 156deg 180deg,currentColor 180deg 186deg,transparent 186deg 210deg,currentColor 210deg 216deg,transparent 216deg 240deg,currentColor 240deg 246deg,transparent 246deg 270deg,currentColor 270deg 276deg,transparent 276deg 300deg,currentColor 300deg 306deg,transparent 306deg 330deg,currentColor 330deg 336deg,transparent 336deg 360deg);opacity:0;mask-image:radial-gradient(circle,black 20%,transparent 65%);-webkit-mask-image:radial-gradient(circle,black 20%,transparent 65%)}
+  .reveal-inner.win .rays{opacity:.22;animation:spin 22s linear infinite}
+  @keyframes spin{to{transform:translate(-50%,-50%) rotate(360deg)}}
+  .reveal-text.small{font-size:52px;letter-spacing:2px}
+  .reveal-sub{font-size:24px;font-weight:900;letter-spacing:3px;text-transform:uppercase;margin-top:22px;animation:revealPop .55s cubic-bezier(.2,1.7,.4,1)}
+  .attempts{display:flex;align-items:center;gap:12px;margin-top:30px;position:relative;z-index:2;font-size:12px;font-weight:800;letter-spacing:2px;text-transform:uppercase}
+  .attempts-label{color:#94a3b8}
+  .attempt-dot{width:18px;height:18px;border-radius:50%;background:#fff;border:2px solid #cbd5e1;transition:.25s}
+  .attempt-dot.active{background:currentColor;border-color:currentColor;box-shadow:0 0 14px currentColor;transform:scale(1.05)}
+  .attempt-dot.lost{background:#fee2e2;border-color:#fca5a5}
+  .reveal-dots{display:flex;gap:8px;margin-top:26px;position:relative;z-index:2;flex-wrap:wrap;justify-content:center}
+  .reveal-dots span{width:10px;height:10px;border-radius:50%;background:#cbd5e1;transition:.25s}
+  .reveal-dots span.done{background:currentColor}
+  .reveal-dots span.active{background:currentColor;transform:scale(1.5);box-shadow:0 0 10px currentColor}
+  .flash{position:absolute;top:14%;left:50%;transform:translateX(-50%) scale(.7);font-size:34px;font-weight:900;letter-spacing:3px;text-transform:uppercase;opacity:0;pointer-events:none;z-index:4;white-space:nowrap;text-shadow:0 4px 20px currentColor, 0 2px 0 rgba(255,255,255,.9)}
+  .flash.show{animation:flashPop .9s cubic-bezier(.2,1.6,.4,1)}
+  @keyframes flashPop{0%{opacity:0;transform:translateX(-50%) scale(.4)}25%{opacity:1;transform:translateX(-50%) scale(1.15)}70%{opacity:1;transform:translateX(-50%) scale(1)}100%{opacity:0;transform:translateX(-50%) scale(1) translateY(-16px)}}
+  .chance-info{position:absolute;bottom:88px;left:0;right:0;text-align:center;z-index:3;font-size:13px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:#64748b}
+  .reveal-hint{position:absolute;bottom:44px;left:0;right:0;text-align:center;font-size:13px;font-weight:800;color:#64748b;letter-spacing:2.5px;text-transform:uppercase;animation:pulse 1.4s ease-in-out infinite;z-index:3}
+  @keyframes pulse{0%,100%{opacity:.45}50%{opacity:1}}
+  @media(max-width:520px){
+    .reveal-text{font-size:44px;letter-spacing:2px}
+    .reveal-text.small{font-size:30px}
+    .reveal-icon{font-size:74px}
+    .flash{font-size:24px}
+  }
+
+  .btn{padding:11px 20px;border:none;border-radius:11px;cursor:pointer;font-size:13px;font-weight:900;letter-spacing:.8px;text-transform:uppercase;transition:.15s;white-space:nowrap}
+  .btn-primary{background:linear-gradient(135deg,#8b5cf6,#ec4899);color:#fff;box-shadow:0 6px 18px rgba(139,92,246,.35)}
+  .btn-primary:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 10px 24px rgba(236,72,153,.45)}
+  .btn-success{background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;box-shadow:0 6px 18px rgba(34,197,94,.4)}
+  .btn-success:hover:not(:disabled){transform:translateY(-1px)}
+  .btn-danger{background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;box-shadow:0 6px 18px rgba(239,68,68,.4)}
+  .btn-danger:hover:not(:disabled){transform:translateY(-1px)}
+  .btn-ghost{background:#f8fafc;border:1px solid #e2e8f0;color:#475569}
+  .btn-ghost:hover:not(:disabled){background:#f1f5f9}
+  .btn:disabled{filter:grayscale(.6) brightness(.9);cursor:not-allowed}
+
+  .game-bar{position:relative;height:52px;border-radius:12px;overflow:hidden;background:linear-gradient(180deg,#f1f5f9,#e2e8f0);border:1px solid #cbd5e1}
+  .game-zone{position:absolute;top:0;bottom:0;background:linear-gradient(180deg,#86efac,#22c55e);opacity:.7;transition:left .2s,right .2s}
+  .game-marker{position:absolute;top:-4px;bottom:-4px;width:6px;border-radius:3px;background:#7c3aed;box-shadow:0 0 14px #7c3aed, 0 0 30px rgba(124,58,237,.6);transform:translateX(-50%)}
+  .diff-row{display:flex;gap:6px;flex-wrap:wrap}
+  .diff-btn{flex:1;min-width:80px;padding:9px 12px;border-radius:10px;cursor:pointer;background:#f8fafc;border:1px solid #e2e8f0;color:#475569;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;transition:.15s}
+  .diff-btn.active{background:#7c3aed;border-color:#7c3aed;color:#fff}
+  .diff-btn small{display:block;font-size:10px;opacity:.85;font-weight:700;margin-top:2px}
+  .game-status{margin-top:8px;font-size:13px;font-weight:800;text-align:center;color:#64748b;letter-spacing:.5px;min-height:20px}
+  .game-status.win{color:#16a34a;animation:pop .4s}
+  .game-status.lose{color:#dc2626;animation:pop .4s}
+
+  .clicker-area{display:flex;flex-direction:column;align-items:center;gap:14px;padding:18px;background:#f8fafc;border-radius:16px;border:1px solid #e2e8f0}
+  .clicker-timer{font-size:42px;font-weight:900;color:#7c3aed;font-variant-numeric:tabular-nums}
+  .clicker-scores{display:flex;gap:26px;justify-content:center;flex-wrap:wrap}
+  .clicker-score{text-align:center}
+  .clicker-score .cs-label{font-size:11px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:1.4px}
+  .clicker-score .cs-value{font-size:32px;font-weight:900;color:#1e293b;font-variant-numeric:tabular-nums}
+  .clicker-score.p1 .cs-value{color:#7c3aed}
+  .clicker-score.p2 .cs-value{color:#2563eb}
+  .click-btn{width:180px;height:180px;border-radius:50%;border:none;cursor:pointer;background:radial-gradient(circle at 30% 30%,#a78bfa,#7c3aed 60%,#5b21b6);color:#fff;font-size:22px;font-weight:900;letter-spacing:2px;text-transform:uppercase;box-shadow:0 16px 40px rgba(124,58,237,.5), inset 0 -10px 22px rgba(0,0,0,.25), inset 0 10px 22px rgba(255,255,255,.2);transition:transform .06s;user-select:none;-webkit-tap-highlight-color:transparent}
+  .click-btn:active{transform:scale(.94)}
+  .click-btn:disabled{filter:grayscale(.6) brightness(.8);cursor:not-allowed}
+  .clicker-modes{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+  .mode-btn{padding:9px 16px;border-radius:10px;cursor:pointer;background:#fff;border:2px solid #e2e8f0;color:#475569;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;transition:.15s}
+  .mode-btn.active{background:#7c3aed;border-color:#7c3aed;color:#fff}
+
+  /* TITLE BATTLE */
+  .tb-arena{display:grid;grid-template-columns:1fr auto 1fr;gap:14px;align-items:stretch}
+  @media(max-width:560px){.tb-arena{grid-template-columns:1fr;gap:8px}.tb-vs{transform:rotate(90deg)}}
+  .tb-side{background:#f8fafc;border:2px solid #e2e8f0;border-radius:16px;padding:16px;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center}
+  .tb-side.p1{border-color:#c4b5fd}
+  .tb-side.p2{border-color:#93c5fd}
+  .tb-side .tb-name{font-size:11.5px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:#94a3b8}
+  .tb-side .tb-title{font-size:16px;font-weight:900;line-height:1.3;min-height:42px;display:flex;align-items:center}
+  .tb-side .tb-rarity{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1.2px}
+  .tb-vs{display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:900;color:#7c3aed}
+  .tb-result{text-align:center;font-size:20px;font-weight:900;letter-spacing:2px;text-transform:uppercase;padding:10px;min-height:30px}
+  .tb-result.win{color:#16a34a}
+  .tb-result.lose{color:#dc2626}
+  .tb-result.draw{color:#64748b}
+  .title-picker{display:flex;flex-wrap:wrap;gap:6px;max-height:160px;overflow-y:auto;padding:6px;background:#f8fafc;border-radius:12px;border:1px solid #e2e8f0}
+  .title-pick{padding:6px 12px;border-radius:8px;cursor:pointer;background:#fff;border:1px solid #e2e8f0;font-size:12px;font-weight:800;transition:.15s}
+  .title-pick.selected{background:#7c3aed;border-color:#7c3aed;color:#fff}
+  .title-pick:hover:not(.selected){background:#f1f5f9}
+
+  /* CASE BATTLE */
+  .bc-arena{display:grid;grid-template-columns:1fr auto 1fr;gap:14px;align-items:stretch}
+  @media(max-width:560px){.bc-arena{grid-template-columns:1fr;gap:8px}.bc-vs{transform:rotate(90deg)}}
+  .bc-side{background:#f8fafc;border:2px solid #e2e8f0;border-radius:16px;padding:16px;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center}
+  .bc-side.p1{border-color:#c4b5fd}
+  .bc-side.p2{border-color:#93c5fd}
+  .bc-side .bc-name{font-size:11.5px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:#94a3b8}
+  .bc-case{
+    font-size:56px;line-height:1;display:grid;place-items:center;
+    width:100px;height:100px;border-radius:18px;
+    background:linear-gradient(145deg,#a78bfa,#7c3aed);
+    box-shadow:0 8px 24px rgba(124,58,237,.4), inset 0 -6px 14px rgba(0,0,0,.2), inset 0 6px 14px rgba(255,255,255,.2);
+    transition:transform .2s, background .2s, box-shadow .2s;
+    color:#fff;
+  }
+  .bc-case.spin{animation:caseShake .5s ease-in-out infinite}
+  .bc-case.reveal{animation:bcReveal .55s cubic-bezier(.2,1.7,.4,1)}
+  @keyframes caseShake{
+    0%,100%{transform:rotate(0) scale(1)}
+    25%{transform:rotate(-14deg) scale(1.06)}
+    75%{transform:rotate(14deg) scale(1.06)}
+  }
+  @keyframes bcReveal{
+    0%{transform:scale(1) rotate(0)}
+    50%{transform:scale(1.35) rotate(-6deg)}
+    100%{transform:scale(1.1) rotate(0)}
+  }
+  .bc-rarity{font-size:12.5px;font-weight:900;letter-spacing:1px;text-transform:uppercase;min-height:20px;color:#94a3b8}
+  .bc-vs{display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:900;color:#7c3aed}
+  .bc-result{text-align:center;font-size:20px;font-weight:900;letter-spacing:2px;text-transform:uppercase;padding:10px;min-height:30px}
+  .bc-result.win{color:#16a34a;animation:pop .4s}
+  .bc-result.lose{color:#dc2626;animation:pop .4s}
+  .bc-result.draw{color:#64748b;animation:pop .4s}
+  .bc-controls{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
+  .bc-bet{display:flex;flex-direction:column;gap:6px}
+  .bc-bet label{font-size:11.5px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:1.2px}
+  .bc-bet input{padding:11px 14px;border-radius:11px;border:1px solid #e2e8f0;background:#f8fafc;font-size:14px;font-weight:800;color:#1e293b;outline:none;width:110px;text-align:center}
+  .bc-bet input:focus{border-color:#7c3aed;background:#fff}
+
+  .exchange-row{display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:12px;background:#f8fafc;border:1px solid #e2e8f0}
+  .ex-label{flex:1;font-size:13px;font-weight:700;color:#334155}
+  .ex-label b{color:#7c3aed}
+
+  .titles-list{display:flex;flex-direction:column;gap:8px;max-height:400px;overflow-y:auto;padding-right:4px}
+  .titles-list::-webkit-scrollbar{width:6px}
+  .titles-list::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:3px}
+  .title-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:11px;background:#f8fafc;border:1px solid #e2e8f0;border-left:3px solid currentColor}
+  .ti-name{flex:1;font-size:13.5px;font-weight:800;color:#1e293b}
+  .ti-count{font-size:11px;color:#94a3b8;font-weight:700}
+  .ti-btn{border:1px solid currentColor;background:#fff;color:inherit;font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;padding:5px 12px;border-radius:8px;cursor:pointer;transition:.15s;white-space:nowrap}
+  .ti-btn:hover{background:currentColor;color:#fff !important}
+  .ti-btn.active{background:currentColor;color:#fff !important;cursor:default}
+
+  .colors-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px}
+  .color-chip{display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:11px;background:#f8fafc;border:1px solid #e2e8f0;cursor:pointer;transition:.15s}
+  .color-chip:hover{background:#f1f5f9}
+  .color-chip.selected{border-color:#7c3aed;box-shadow:0 0 0 3px rgba(124,58,237,.15)}
+  .color-dot{width:20px;height:20px;border-radius:50%;flex-shrink:0;box-shadow:0 0 10px currentColor}
+  .color-name{font-size:12px;font-weight:800;color:#334155;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .color-lock{font-size:14px}
+
+  .empty{font-size:13px;color:#94a3b8;text-align:center;padding:22px 0}
+  .log{display:flex;flex-direction:column;gap:7px;max-height:280px;overflow-y:auto;padding-right:4px}
+  .log::-webkit-scrollbar{width:6px}
+  .log::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:3px}
+  .log-row{display:flex;align-items:center;gap:9px;font-size:12.5px;padding:7px 11px;border-radius:9px;background:#f8fafc;border-left:3px solid currentColor}
+  .log-row .lr-name{font-weight:800}
+  .log-row .lr-rest{color:#94a3b8;font-size:11.5px}
+
+  .profile-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  @media(max-width:560px){.profile-grid{grid-template-columns:1fr}}
+  .input-row{display:flex;flex-direction:column;gap:6px}
+  .input-row label{font-size:11.5px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:1.2px}
+  .input-row input{padding:11px 14px;border-radius:11px;border:1px solid #e2e8f0;background:#f8fafc;font-size:14px;font-weight:700;color:#1e293b;outline:none;transition:.15s}
+  .input-row input:focus{border-color:#7c3aed;background:#fff}
+
+  .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px}
+  .stat-box{padding:11px 14px;border-radius:12px;background:#f8fafc;border:1px solid #e2e8f0}
+  .stat-box .sb-label{font-size:11px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:1px}
+  .stat-box .sb-value{font-size:22px;font-weight:900;color:#7c3aed;margin-top:3px}
+
+  .chances{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px}
+  .chance{display:flex;flex-direction:column;gap:2px;padding:9px 12px;border-radius:11px;background:#f8fafc;border:1px solid #e2e8f0;border-left:3px solid currentColor;font-size:12.5px;font-weight:700}
+  .chance .ch-head{display:flex;justify-content:space-between;align-items:center;gap:8px}
+  .chance small{font-weight:800;font-size:11px}
+  .chance .ch-up{font-size:10.5px;color:#94a3b8;font-weight:700}
+
+  .admin-back{position:fixed;inset:0;background:rgba(15,23,42,.5);z-index:200;display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(3px)}
+  .admin-back.show{display:flex;animation:revealFade .2s}
+  .admin-panel{background:#fff;border-radius:20px;max-width:560px;width:100%;max-height:90vh;overflow-y:auto;padding:22px;box-shadow:0 20px 60px rgba(15,23,42,.3);display:flex;flex-direction:column;gap:16px;position:relative}
+  .admin-panel h3{font-size:17px;font-weight:900;letter-spacing:1px;text-transform:uppercase;color:#7c3aed;display:flex;align-items:center;gap:9px}
+  .admin-panel h3::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,#c4b5fd,transparent)}
+  .admin-section{display:flex;flex-direction:column;gap:8px}
+  .admin-section-title{font-size:11.5px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;color:#94a3b8}
+  .admin-row{display:flex;gap:8px;flex-wrap:wrap}
+  .admin-btn2{flex:1;min-width:110px;border:1px solid #e2e8f0;background:#f8fafc;color:#334155;padding:9px 12px;border-radius:10px;cursor:pointer;font-size:12px;font-weight:800;transition:.15s}
+  .admin-btn2:hover{background:#7c3aed;color:#fff;border-color:#7c3aed}
+  .admin-btn2.danger:hover{background:#dc2626;border-color:#dc2626}
+  .admin-btn2.success:hover{background:#16a34a;border-color:#16a34a}
+  .admin-input{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:10px;background:#f8fafc;border:1px solid #e2e8f0}
+  .admin-input label{flex:1;font-size:12.5px;font-weight:700;color:#334155}
+  .admin-input input{width:80px;padding:6px 10px;border-radius:8px;border:1px solid #cbd5e1;font-size:13px;font-weight:800;color:#1e293b;text-align:right;outline:none}
+  .admin-input input:focus{border-color:#7c3aed;box-shadow:0 0 0 3px rgba(124,58,237,.15)}
+  .close-admin{position:absolute;top:14px;right:14px;background:#f1f5f9;border:none;width:32px;height:32px;border-radius:9px;cursor:pointer;font-size:17px;color:#64748b}
+  .close-admin:hover{background:#e2e8f0;color:#1e293b}
+
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(40px);background:#1e293b;color:#fff;padding:12px 22px;border-radius:12px;font-size:13px;font-weight:800;letter-spacing:.5px;z-index:400;opacity:0;pointer-events:none;transition:.25s;box-shadow:0 12px 36px rgba(15,23,42,.4)}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+
+<!-- AUTH -->
+<div class="auth-screen" id="authScreen">
+  <div class="auth-card">
+    <h1>🎁 Case Simulator</h1>
+    <div class="auth-tabs">
+      <button data-auth="login" class="active" type="button">Вход</button>
+      <button data-auth="register" type="button">Регистрация</button>
+    </div>
+    <input id="authUser" placeholder="Логин (3-16 символов)" maxlength="16" autocomplete="off" type="text">
+    <input id="authPass" placeholder="Пароль (мин. 3 символа)" maxlength="32" autocomplete="off" type="password">
+    <button class="auth-submit" id="authSubmit" type="button">Войти</button>
+    <div class="auth-error" id="authError"></div>
+    <div class="auth-hint" id="authHint">Прогресс сохраняется в браузере</div>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="app hidden" id="mainApp">
+  <div class="topbar">
+    <div class="profile">
+      <div class="avatar">🎮</div>
+      <div>
+        <div class="nick">
+          <span class="title-badge" id="titleBadge"></span>
+          <span id="displayNick" style="color:#7c3aed">Игрок</span>
+        </div>
+        <div class="sub">Профиль • Case Simulator Pro</div>
+      </div>
+    </div>
+    <div class="wallets">
+      <div class="wallet coins"><span class="ico">🪙</span><span id="wCoins">0</span></div>
+      <div class="wallet gems"><span class="ico">💎</span><span id="wGems">0</span></div>
+      <div class="wallet cups"><span class="ico">🏆</span><span id="wCups">0</span></div>
+      <button class="icon-btn" id="adminBtn" title="Админка" type="button">⚙</button>
+      <button class="icon-btn" id="logoutBtn" title="Выйти" type="button">🚪</button>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="case" type="button">🎁 Кейс</button>
+    <button class="tab-btn" data-tab="games" type="button">🎮 Игры</button>
+    <button class="tab-btn" data-tab="inventory" type="button">🎒 Инвентарь</button>
+    <button class="tab-btn" data-tab="profile" type="button">👤 Профиль</button>
+  </div>
+
+  <div class="tab-panel active" id="tab-case">
+    <div class="case-panel">
+      <div class="panel-title">🎁 Кейс удачи</div>
+      <div class="case-preview">🎁</div>
+      <div class="result"><div class="result-card" id="resultCard"></div></div>
+      <button class="open-btn" id="openBtn" type="button">Открыть кейс</button>
+    </div>
+    <div class="card">
+      <div class="panel-title small">📊 Шансы выпадения и апгрейда</div>
+      <div class="chances" id="chances"></div>
+    </div>
+  </div>
+
+  <div class="tab-panel" id="tab-games">
+    <div class="card">
+      <div class="panel-title">🎯 Точный удар</div>
+      <div class="diff-row" id="diffRow"></div>
+      <div class="game-bar"><div class="game-zone" id="gameZone"></div><div class="game-marker" id="gameMarker" style="left:0%"></div></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn btn-success" id="gameStart" type="button">Старт (10 🪙)</button>
+        <button class="btn btn-danger" id="gameStop" type="button" disabled>Стоп</button>
+      </div>
+      <div class="game-status" id="gameStatus">Выбери сложность и жми «Старт»</div>
+    </div>
+
+    <div class="card">
+      <div class="panel-title">🖱️ Битва кликов</div>
+      <div class="clicker-modes" id="clickerModes">
+        <button class="mode-btn active" data-cmode="bot" type="button">🤖 Против бота</button>
+        <button class="mode-btn" data-cmode="pvp" type="button">👥 2 игрока</button>
+      </div>
+      <div class="diff-row" id="clickerDiffRow"></div>
+      <div class="clicker-area">
+        <div class="clicker-timer" id="clickerTimer">10.0</div>
+        <div class="clicker-scores">
+          <div class="clicker-score p1"><div class="cs-label">Игрок 1</div><div class="cs-value" id="cP1">0</div></div>
+          <div class="clicker-score p2"><div class="cs-label" id="cP2Label">Бот</div><div class="cs-value" id="cP2">0</div></div>
+        </div>
+        <button class="click-btn" id="clickBtn" type="button" disabled>КЛИК</button>
+        <div class="game-status" id="clickerStatus">Жми «Старт»</div>
+        <button class="btn btn-primary" id="clickerStart" type="button">Старт</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="panel-title">🏷️ Битва титулов</div>
+      <div class="tb-arena">
+        <div class="tb-side p1"><div class="tb-name">Ты</div><div class="tb-title" id="tbP1Title" style="color:#94a3b8">Выбери титул ниже</div><div class="tb-rarity" id="tbP1Rar"></div></div>
+        <div class="tb-vs">VS</div>
+        <div class="tb-side p2"><div class="tb-name">Соперник</div><div class="tb-title" id="tbP2Title" style="color:#94a3b8">???</div><div class="tb-rarity" id="tbP2Rar"></div></div>
+      </div>
+      <div class="tb-result" id="tbResult"></div>
+      <div class="title-picker" id="titlePicker"></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn btn-primary" id="tbFight" type="button" disabled>⚔ В бой (2 💎)</button>
+        <button class="btn btn-ghost" id="tbClear" type="button">Сбросить</button>
+      </div>
+      <div class="game-status" id="tbStatus">Выбери свой титул, чтобы начать</div>
+    </div>
+
+    <div class="card">
+      <div class="panel-title">📦 Битва кейсов</div>
+      <div class="bc-arena">
+        <div class="bc-side p1">
+          <div class="bc-name">Ты</div>
+          <div class="bc-case" id="bcP1Case">🎁</div>
+          <div class="bc-rarity" id="bcP1Rar">—</div>
+        </div>
+        <div class="bc-vs">VS</div>
+        <div class="bc-side p2">
+          <div class="bc-name">Соперник</div>
+          <div class="bc-case" id="bcP2Case">🎁</div>
+          <div class="bc-rarity" id="bcP2Rar">—</div>
+        </div>
+      </div>
+      <div class="bc-result" id="bcResult"></div>
+      <div class="bc-controls">
+        <div class="bc-bet">
+          <label>Ставка (💎)</label>
+          <input type="number" id="bcBet" min="1" max="500" step="1" value="2">
+        </div>
+        <button class="btn btn-primary" id="bcFight" type="button">⚔ Открыть (2 💎)</button>
+      </div>
+      <div class="game-status" id="bcStatus">Кто выбьет редкость выше — забирает банк ×2</div>
+    </div>
+
+    <div class="card">
+      <div class="panel-title">💱 Обмен</div>
+      <div class="exchange-row"><div class="ex-label"><b>10 🏆</b> → 1 💎</div><button class="btn btn-primary" id="exCups" type="button">Обменять</button></div>
+      <div class="exchange-row"><div class="ex-label"><b>100 🪙</b> → 1 💎</div><button class="btn btn-primary" id="exCoins" type="button">Обменять</button></div>
+      <div class="exchange-row"><div class="ex-label"><b>5 🏆</b> → 1 💎 (дорого)</div><button class="btn btn-primary" id="exCupsExp" type="button">Обменять</button></div>
+    </div>
+  </div>
+
+  <div class="tab-panel" id="tab-inventory">
+    <div class="card">
+      <div class="panel-title">🏷️ Мои титулы (<span id="titleCount">0</span>/<span id="titleTotal">60</span>)</div>
+      <div class="titles-list" id="titlesList"><div class="empty">Титулов пока нет.<br>Выбивай их из кейса!</div></div>
+    </div>
+    <div class="card"><div class="panel-title">🎨 Цвета ника</div><div class="colors-grid" id="colorsGrid"></div></div>
+    <div class="card"><div class="panel-title">📜 История дропа</div><div class="log" id="log"><div class="empty">Здесь появится история открытий.</div></div></div>
+  </div>
+
+  <div class="tab-panel" id="tab-profile">
+    <div class="card">
+      <div class="panel-title">👤 Профиль</div>
+      <div class="profile-grid">
+        <div class="input-row"><label>Никнейм</label><input id="inNick" maxlength="16" placeholder="Введи ник" type="text"></div>
+        <div class="input-row"><label>Логин</label><input id="inLogin" disabled type="text"></div>
+      </div>
+      <button class="btn btn-primary" id="saveNick" style="align-self:flex-start" type="button">Сохранить ник</button>
+    </div>
+    <div class="card">
+      <div class="panel-title">📈 Статистика</div>
+      <div class="stats-grid">
+        <div class="stat-box"><div class="sb-label">Кейсов</div><div class="sb-value" id="stCases">0</div></div>
+        <div class="stat-box"><div class="sb-label">Побед кликер</div><div class="sb-value" id="stCw">0</div></div>
+        <div class="stat-box"><div class="sb-label">Поражений кликер</div><div class="sb-value" id="stCl">0</div></div>
+        <div class="stat-box"><div class="sb-label">Побед титул</div><div class="sb-value" id="stTw">0</div></div>
+        <div class="stat-box"><div class="sb-label">Побед кейс</div><div class="sb-value" id="stBcw">0</div></div>
+        <div class="stat-box"><div class="sb-label">Титулов</div><div class="sb-value" id="stTitles">0</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="reveal-overlay" id="revealOverlay">
+  <div class="reveal-bg" id="revealBg"></div>
+  <div class="reveal-inner" id="revealInner"></div>
+  <div class="attempts" id="attempts"></div>
+  <div class="reveal-dots" id="revealDots"></div>
+  <div class="chance-info" id="chanceInfo"></div>
+  <div class="flash" id="flash"></div>
+  <div class="reveal-hint" id="revealHint">👆 Нажми, чтобы улучшить</div>
+</div>
+
+<div class="admin-back" id="adminBack">
+  <div class="admin-panel">
+    <button class="close-admin" id="closeAdmin" type="button">✕</button>
+    <h3>⚙ Админ-панель</h3>
+    <div class="admin-section">
+      <div class="admin-section-title">Выдать валюту</div>
+      <div class="admin-row">
+        <button class="admin-btn2 success" data-give="coins:1000" type="button">+1000 🪙</button>
+        <button class="admin-btn2 success" data-give="gems:100" type="button">+100 💎</button>
+        <button class="admin-btn2 success" data-give="cups:100" type="button">+100 🏆</button>
+      </div>
+      <div class="admin-row">
+        <button class="admin-btn2 success" data-give="coins:10000" type="button">+10k 🪙</button>
+        <button class="admin-btn2 success" data-give="gems:1000" type="button">+1000 💎</button>
+        <button class="admin-btn2 success" data-give="cups:1000" type="button">+1000 🏆</button>
+      </div>
+    </div>
+    <div class="admin-section"><div class="admin-section-title">Выдать титул</div><div class="admin-row" id="giveTitleRow"></div></div>
+    <div class="admin-section"><div class="admin-section-title">Разблокировать цвета</div><div class="admin-row"><button class="admin-btn2 success" id="unlockAllColors" type="button">Открыть все цвета</button></div></div>
+    <div class="admin-section"><div class="admin-section-title">Шансы апгрейда</div><div id="chanceInputs"></div></div>
+    <div class="admin-section">
+      <div class="admin-section-title">Настройка цен</div>
+      <div class="admin-input"><label>Кейс (💎)</label><input type="number" id="inCasePrice" min="0" step="1"></div>
+      <div class="admin-input"><label>10 🏆 = X 💎</label><input type="number" id="inCupsRate" min="1" step="1"></div>
+      <div class="admin-input"><label>100 🪙 = X 💎</label><input type="number" id="inCoinsRate" min="1" step="1"></div>
+    </div>
+    <div class="admin-section">
+      <div class="admin-section-title">Опасная зона</div>
+      <div class="admin-row"><button class="admin-btn2 danger" id="resetAll" type="button">Сбросить весь прогресс</button></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   БАЗА
+   ============================================================ */
+const USERS_KEY = 'caseSim_users_v3';
+const SESSION_KEY = 'caseSim_session_v3';
+
+const $ = id => document.getElementById(id);
+const randInt = (a, b) => Math.floor(Math.random() * (b - a + 1)) + a;
+
+function showToast(msg) {
+  const t = $('toast'); if (!t) return;
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._t);
+  t._t = setTimeout(() => t.classList.remove('show'), 2000);
+}
+function safeGet(k) { try { return localStorage.getItem(k); } catch(e) { return null; } }
+function safeSet(k, v) { try { localStorage.setItem(k, v); return true; } catch(e) { return false; } }
+function safeRemove(k) { try { localStorage.removeItem(k); } catch(e) {} }
+
+/* ============================================================
+   ДАННЫЕ
+   ============================================================ */
+const RARITIES = [
+  { id:'common',    name:'Редкий',       color:'#64748b', icon:'🔘', coins:[5, 20],      titleChance:0,    colorChance:0  },
+  { id:'uncommon',  name:'Сверхредкий',  color:'#2563eb', icon:'💠', coins:[25, 70],     titleChance:0,    colorChance:0  },
+  { id:'epic',      name:'Эпический',    color:'#db2777', icon:'🌸', coins:[80, 200],    titleChance:15,   colorChance:5  },
+  { id:'mythic',    name:'Мифический',   color:'#dc2626', icon:'🔥', coins:[250, 550],   titleChance:30,   colorChance:12 },
+  { id:'legendary', name:'Легендарный',  color:'#ca8a04', icon:'⭐', coins:[700, 1500],  titleChance:60,   colorChance:25 },
+  { id:'ancient',   name:'Древний',      color:'#0d9488', icon:'🏛️', coins:[1500, 3000], titleChance:75,   colorChance:35 },
+  { id:'divine',    name:'Божественный', color:'#f97316', icon:'✨', coins:[2500, 5000], titleChance:90,   colorChance:42 },
+  { id:'ultra',     name:'Ультра',       color:'#9333ea', icon:'🌌', coins:[3000, 8000], titleChance:100,  colorChance:50 },
+];
+const RARITY_MAP = Object.fromEntries(RARITIES.map(r => [r.id, r]));
+const RARITY_INDEX = Object.fromEntries(RARITIES.map((r, i) => [r.id, i]));
+const DROP_WEIGHTS = [5.0, 45.0, 42.0, 4.0, 2.0, 1.5, 0.4, 0.1];
+const DEFAULT_UPGRADE = [1.00, 0.50, 0.14, 0.04, 0.015, 0.005, 0.002];
+
+const TITLES = {
+  epic: ['🍀 Счастливчик','🎯 Меткий','✨ Искатель удачи','🎲 Азартный','🔮 Ясновидец','🌟 Звёздный','🍭 Сладкий','🎨 Художник','🐺 Волк','🦊 Хитрец','🌊 Волна','🍕 Гурман','🎸 Рокер','🚀 Космонавт','🌙 Лунный'],
+  mythic: ['🔥 Охотник за кейсами','💎 Коллекционер','🗡️ Мифический','⚔️ Воин','🛡️ Защитник','👊 Крушитель','🐉 Дракон','🦁 Лев','🌪️ Шторм','⚡ Гром','☄️ Метеор','🌋 Вулкан'],
+  legendary: ['👑 Легенда','⚡ Повелитель кейсов','🏆 Золотой чемпион','💀 Неуловимый','🌟 Суперзвезда','🧙 Архимаг','🐲 Владыка Драконов','👽 Космический','🦄 Единорог','🌈 Радужный','💫 Сияющий','🕊️ Свободный'],
+  ancient: ['🏛️ Древний','📜 Хранитель Времени','⚱️ Артефакт','🔱 Посейдон','🐍 Василиск'],
+  divine: ['✨ Божественный','😇 Ангел','☀️ Солнечный','⚡ Зевс','🌟 Всевышний'],
+  ultra: ['🌌 УЛЬТРА','🔮 Фиолетовый Бог','👁️ Владыка Бездны','🕳️ Пустота','⚫ Тьма','☠️ Легенда Смерти','🌀 Абсолют','✴️ Бесконечность','🔱 Триединство','⚜️ Император','🌠 Космос'],
+};
+const ALL_TITLES = [];
+for (const [rid, list] of Object.entries(TITLES)) {
+  for (const name of list) ALL_TITLES.push({ name, rarityId: rid });
+}
+
+const NICK_COLORS = [
+  { id:'default', color:'#7c3aed', name:'Фиолетовый' },
+  { id:'blue',    color:'#2563eb', name:'Синий' },
+  { id:'green',   color:'#16a34a', name:'Зелёный' },
+  { id:'red',     color:'#dc2626', name:'Красный' },
+  { id:'gold',    color:'#ca8a04', name:'Золотой' },
+  { id:'pink',    color:'#db2777', name:'Розовый' },
+  { id:'cyan',    color:'#0891b2', name:'Голубой' },
+  { id:'orange',  color:'#ea580c', name:'Оранжевый' },
+  { id:'lime',    color:'#65a30d', name:'Лаймовый' },
+  { id:'violet',  color:'#9333ea', name:'Ультрафиолет' },
+  { id:'teal',    color:'#0d9488', name:'Бирюзовый' },
+  { id:'rose',    color:'#e11d48', name:'Малиновый' },
+];
+
+const DEFAULT_STATE = {
+  nickname: '', nickColor: '#7c3aed', unlockedColors: ['#7c3aed'],
+  coins: 200, gems: 20, cups: 0,
+  inventory: [], currentTitle: null, log: [],
+  upgradeChances: [...DEFAULT_UPGRADE],
+  casePrice: 5, cupsRate: 10, coinsRate: 100,
+  stats: { casesOpened:0, cw:0, cl:0, tw:0, tl:0, bcw:0, bcl:0 },
+};
+function cloneState(s) { return JSON.parse(JSON.stringify(s)); }
+
+let state = cloneState(DEFAULT_STATE);
+let currentLogin = '';
+let opening = false;
+let currentIdx = 0, attempts = 3;
+let wonRarity = null, wonCoins = 0, wonTitle = null, wonColor = null;
+let phase = 'idle';
+const MAX_ATTEMPTS = 3;
+let authMode = 'login';
+
+/* ============================================================
+   АККАУНТЫ
+   ============================================================ */
+function loadUsers() {
+  try {
+    const raw = safeGet(USERS_KEY);
+    if (!raw) return {};
+    const p = JSON.parse(raw);
+    return (p && typeof p === 'object') ? p : {};
+  } catch(e) { return {}; }
+}
+function saveUsers(u) { safeSet(USERS_KEY, JSON.stringify(u)); }
+function hashPass(s) {
+  let h = 5381;
+  for (let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) | 0;
+  return 'h' + Math.abs(h).toString(36);
+}
+
+document.querySelectorAll('[data-auth]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    authMode = btn.dataset.auth;
+    document.querySelectorAll('[data-auth]').forEach(b => b.classList.toggle('active', b === btn));
+    $('authSubmit').textContent = authMode === 'login' ? 'Войти' : 'Зарегистрироваться';
+    $('authHint').textContent = authMode === 'login'
+      ? 'Войди чтобы загрузить сохранение' : 'Аккаунт сохранится в браузере';
+    $('authError').textContent = '';
+  });
+});
+
+function doAuth() {
+  const u = ($('authUser').value || '').trim();
+  const p = $('authPass').value || '';
+  const err = $('authError');
+  if (u.length < 3 || u.length > 16) { err.textContent = 'Логин 3-16 символов'; return; }
+  if (p.length < 3) { err.textContent = 'Пароль минимум 3 символа'; return; }
+  err.textContent = '';
+  try {
+    const users = loadUsers();
+    const hp = hashPass(p);
+    if (authMode === 'register') {
+      if (users[u]) { err.textContent = 'Логин занят'; return; }
+      const newState = cloneState(DEFAULT_STATE);
+      newState.nickname = u;
+      users[u] = { pass: hp, state: newState, created: Date.now() };
+      saveUsers(users);
+      startSession(u, newState);
+    } else {
+      if (!users[u]) { err.textContent = 'Пользователь не найден'; return; }
+      if (users[u].pass !== hp) { err.textContent = 'Неверный пароль'; return; }
+      startSession(u, users[u].state || {});
+    }
+  } catch(e) { console.error(e); err.textContent = 'Ошибка: ' + (e.message || ''); }
+}
+
+function startSession(username, userState) {
+  try {
+    currentLogin = username;
+    safeSet(SESSION_KEY, username);
+    const merged = Object.assign(cloneState(DEFAULT_STATE), userState || {});
+    if (!merged.nickname) merged.nickname = username;
+    if (!Array.isArray(merged.unlockedColors) || !merged.unlockedColors.length) merged.unlockedColors = ['#7c3aed'];
+    if (!Array.isArray(merged.upgradeChances) || merged.upgradeChances.length < RARITIES.length - 1) merged.upgradeChances = [...DEFAULT_UPGRADE];
+    if (!Array.isArray(merged.inventory)) merged.inventory = [];
+    if (!Array.isArray(merged.log)) merged.log = [];
+    if (!merged.stats) merged.stats = { casesOpened:0, cw:0, cl:0, tw:0, tl:0, bcw:0, bcl:0 };
+    if (merged.stats.bcw === undefined) merged.stats.bcw = 0;
+    if (merged.stats.bcl === undefined) merged.stats.bcl = 0;
+    state = merged;
+
+    $('authScreen').classList.add('hidden');
+    $('mainApp').classList.remove('hidden');
+
+    renderDiffButtons(); renderClickerDiffs(); resetClicker(); updateTbPreview(); setDifficulty('medium');
+    renderAll(); renderChances(); renderColors(); renderTitlePicker();
+    $('titleTotal').textContent = ALL_TITLES.length;
+    showToast('Привет, ' + (state.nickname || username) + '!');
+  } catch(e) { console.error(e); $('authError').textContent = 'Ошибка: ' + (e.message || ''); }
+}
+
+function saveState() {
+  if (!currentLogin) return;
+  try {
+    const users = loadUsers();
+    if (!users[currentLogin]) return;
+    users[currentLogin].state = cloneState(state);
+    saveUsers(users);
+  } catch(e) { console.error(e); }
+}
+
+$('logoutBtn').addEventListener('click', () => {
+  saveState(); safeRemove(SESSION_KEY); location.reload();
+});
+
+/* ============================================================
+   UI
+   ============================================================ */
+function renderCurrencies() {
+  $('wCoins').textContent = (state.coins || 0).toLocaleString('ru-RU');
+  $('wGems').textContent = (state.gems || 0).toLocaleString('ru-RU');
+  $('wCups').textContent = (state.cups || 0).toLocaleString('ru-RU');
+  const btn = $('openBtn');
+  const canOpen = !opening && state.gems >= state.casePrice;
+  btn.disabled = !canOpen;
+  if (!opening) btn.textContent = `Открыть кейс (${state.casePrice} 💎)`;
+  $('exCups').disabled = state.cups < state.cupsRate;
+  $('exCoins').disabled = state.coins < state.coinsRate;
+  $('exCupsExp').disabled = state.cups < 5;
+}
+
+function renderNick() {
+  const el = $('displayNick');
+  el.textContent = state.nickname || currentLogin;
+  el.style.color = state.nickColor;
+}
+
+function renderBadge() {
+  const b = $('titleBadge');
+  if (!state.currentTitle) { b.classList.remove('on'); b.textContent = ''; return; }
+  const item = state.inventory.find(t => t.name === state.currentTitle);
+  if (!item) { b.classList.remove('on'); b.textContent = ''; return; }
+  const r = RARITY_MAP[item.rarityId];
+  if (!r) { b.classList.remove('on'); b.textContent = ''; return; }
+  b.textContent = state.currentTitle; b.style.color = r.color; b.classList.add('on');
+}
+
+function renderTitles() {
+  const list = $('titlesList');
+  $('titleCount').textContent = state.inventory.length;
+  if (!state.inventory.length) {
+    list.innerHTML = '<div class="empty">Титулов пока нет.<br>Выбивай их из кейса!</div>';
+    return;
+  }
+  const sorted = [...state.inventory].sort((a, b) => (RARITY_INDEX[b.rarityId]||0) - (RARITY_INDEX[a.rarityId]||0));
+  list.innerHTML = sorted.map(t => {
+    const r = RARITY_MAP[t.rarityId] || RARITIES[0];
+    const active = state.currentTitle === t.name;
+    return `<div class="title-item" style="color:${r.color}">
+      <span class="ti-name">${t.name}</span>
+      <span class="ti-count">x${t.count}</span>
+      <button class="ti-btn ${active ? 'active' : ''}" data-title="${t.name}" ${active ? 'disabled' : ''} type="button">${active ? 'Активен' : 'Применить'}</button>
+    </div>`;
+  }).join('');
+  list.querySelectorAll('.ti-btn[data-title]').forEach(btn => {
+    btn.addEventListener('click', () => applyTitle(btn.dataset.title));
+  });
+}
+
+function applyTitle(name) {
+  const item = state.inventory.find(t => t.name === name);
+  if (!item) return;
+  state.currentTitle = name;
+  renderTitles(); renderBadge(); renderTitlePicker(); saveState();
+}
+
+function renderColors() {
+  const grid = $('colorsGrid');
+  grid.innerHTML = NICK_COLORS.map(c => {
+    const unlocked = state.unlockedColors.includes(c.color);
+    const selected = state.nickColor === c.color;
+    return `<div class="color-chip ${selected ? 'selected' : ''}" data-color="${c.color}" data-unlocked="${unlocked}">
+      <div class="color-dot" style="background:${c.color};color:${c.color}"></div>
+      <div class="color-name">${c.name}</div>
+      ${unlocked ? '' : '<div class="color-lock">🔒</div>'}
+    </div>`;
+  }).join('');
+  grid.querySelectorAll('.color-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      const color = chip.dataset.color;
+      const unlocked = chip.dataset.unlocked === 'true';
+      if (!unlocked) { showToast('Цвет заблокирован — выбей из кейса!'); return; }
+      state.nickColor = color;
+      renderNick(); renderColors(); saveState();
+    });
+  });
+}
+
+function renderLog() {
+  const log = $('log');
+  if (!state.log.length) { log.innerHTML = '<div class="empty">Здесь появится история открытий.</div>'; return; }
+  log.innerHTML = state.log.map(e => {
+    const r = RARITY_MAP[e.rarityId] || RARITIES[0];
+    return `<div class="log-row" style="color:${r.color}">
+      <span>${r.icon}</span>
+      <span class="lr-name">${r.name}</span>
+      <span class="lr-rest">+${e.coins} 🪙${e.title ? ' • ' + e.title : ''}${e.color ? ' • 🎨' : ''}</span>
+    </div>`;
+  }).join('');
+}
+
+function renderChances() {
+  $('chances').innerHTML = RARITIES.map((r, i) => {
+    const up = state.upgradeChances[i] || 0;
+    const upTxt = (i < RARITIES.length - 1) ? `⬆ ${Math.round(up * 100)}% на «${RARITIES[i+1].name}»` : '🌟 Максимум';
+    return `<div class="chance" style="color:${r.color}">
+      <div class="ch-head"><span>${r.icon} ${r.name}</span><small>${DROP_WEIGHTS[i]}%</small></div>
+      <div class="ch-up">${upTxt}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderStats() {
+  $('stCases').textContent = state.stats.casesOpened || 0;
+  $('stCw').textContent = state.stats.cw || 0;
+  $('stCl').textContent = state.stats.cl || 0;
+  $('stTw').textContent = state.stats.tw || 0;
+  $('stBcw').textContent = state.stats.bcw || 0;
+  $('stTitles').textContent = state.inventory.length;
+  $('inLogin').value = currentLogin;
+  $('inNick').value = state.nickname || currentLogin;
+}
+
+function renderAll() { renderCurrencies(); renderNick(); renderTitles(); renderBadge(); renderLog(); renderStats(); }
+
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b === btn));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === 'tab-' + btn.dataset.tab));
+  });
+});
+
+/* ============================================================
+   КЕЙС
+   ============================================================ */
+function rollRarity() {
+  let r = Math.random() * 100;
+  for (let i = 0; i < RARITIES.length; i++) {
+    if (r < DROP_WEIGHTS[i]) return RARITIES[i];
+    r -= DROP_WEIGHTS[i];
+  }
+  return RARITIES[RARITIES.length - 1];
+}
+
+function openCase() {
+  if (opening) return;
+  if (state.gems < state.casePrice) return;
+  state.gems -= state.casePrice;
+  state.stats.casesOpened++;
+  renderCurrencies();
+  opening = true;
+  $('resultCard').classList.remove('show');
+  wonRarity = null; wonCoins = 0; wonTitle = null; wonColor = null;
+  currentIdx = 0; attempts = MAX_ATTEMPTS; phase = 'upgrade';
+  const o = $('revealOverlay');
+  o.classList.add('show'); o.classList.remove('locked');
+  renderRevealRarity(0, false);
+  renderAttempts(); renderDots(); renderChanceInfo();
+  const btn = $('openBtn');
+  btn.disabled = true; btn.textContent = 'Открываем...';
+  saveState();
+}
+
+function renderRevealRarity(idx, isWin) {
+  const rar = RARITIES[idx];
+  const inner = $('revealInner');
+  inner.classList.toggle('win', !!isWin);
+  inner.style.color = rar.color;
+  $('revealOverlay').style.color = rar.color;
+  $('revealBg').style.setProperty('--c', rar.color);
+  $('revealDots').style.color = rar.color;
+  inner.innerHTML = `<div class="rays"></div><div class="reveal-icon" style="color:${rar.color}">${rar.icon}</div><div class="reveal-text" style="color:${rar.color}">${rar.name}</div>`;
+}
+
+function renderAttempts() {
+  const el = $('attempts');
+  el.style.color = RARITIES[currentIdx].color;
+  let html = '<span class="attempts-label">Попытки</span>';
+  for (let i = 0; i < MAX_ATTEMPTS; i++) html += `<span class="attempt-dot ${i < attempts ? 'active' : 'lost'}"></span>`;
+  el.innerHTML = html;
+}
+
+function renderDots() {
+  const el = $('revealDots');
+  el.style.color = RARITIES[currentIdx].color;
+  el.innerHTML = RARITIES.map((_, i) => {
+    if (i < currentIdx) return `<span class="done"></span>`;
+    if (i === currentIdx) return `<span class="active"></span>`;
+    return `<span></span>`;
+  }).join('');
+}
+
+function renderChanceInfo() {
+  const el = $('chanceInfo');
+  const i = currentIdx;
+  if (i >= RARITIES.length - 1) {
+    el.innerHTML = `<span style="color:${RARITIES[i].color}">🌟 Это максимум — забирай!</span>`;
+    return;
+  }
+  const chance = Math.round((state.upgradeChances[i] || 0) * 100);
+  el.innerHTML = `Шанс апгрейда до «${RARITIES[i+1].name}»: <b style="color:${RARITIES[i].color}">${chance}%</b>`;
+}
+
+function showFlash(text, color) {
+  const el = $('flash');
+  el.textContent = text; el.style.color = color;
+  el.classList.remove('show'); void el.offsetWidth; el.classList.add('show');
+  clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove('show'), 950);
+}
+
+function shake() {
+  const inner = $('revealInner');
+  inner.classList.remove('shake'); void inner.offsetWidth; inner.classList.add('shake');
+}
+
+function advanceReveal() {
+  if (phase === 'idle') return;
+  if (phase === 'upgrade') { tryUpgrade(); return; }
+  if (phase === 'reward') {
+    applyRewards(wonRarity, wonCoins, wonTitle, wonColor);
+    hideReveal(); opening = false; renderCurrencies();
+  }
+}
+
+function tryUpgrade() {
+  if (currentIdx >= RARITIES.length - 1) { goToReward(); return; }
+  const chance = state.upgradeChances[currentIdx];
+  const success = Math.random() < chance;
+  if (success) {
+    currentIdx++;
+    attempts = MAX_ATTEMPTS;
+    const reachedMax = (currentIdx >= RARITIES.length - 1);
+    renderRevealRarity(currentIdx, true);
+    renderAttempts(); renderDots(); renderChanceInfo();
+    if (reachedMax) {
+      showFlash('МАКСИМУМ!', RARITIES[currentIdx].color);
+      $('revealHint').textContent = '👆 Нажми, чтобы забрать награду';
+    } else {
+      showFlash('УЛУЧШЕНИЕ!', RARITIES[currentIdx].color);
+      $('revealHint').textContent = '👆 Нажми, чтобы улучшить';
+    }
+  } else {
+    attempts--;
+    showFlash('НЕ ПОВЕЗЛО', '#ef4444');
+    shake(); renderAttempts();
+    if (attempts <= 0) {
+      $('revealHint').textContent = 'Попытки закончились!';
+      $('revealOverlay').classList.add('locked');
+      setTimeout(() => { $('revealOverlay').classList.remove('locked'); goToReward(); }, 700);
+    } else {
+      $('revealHint').textContent = '👆 Нажми, чтобы попробовать снова';
+    }
+  }
+}
+
+function goToReward() {
+  const rar = RARITIES[currentIdx];
+  wonRarity = rar;
+  wonCoins = randInt(rar.coins[0], rar.coins[1]);
+  wonTitle = null;
+  if (rar.titleChance > 0 && Math.random() * 100 < rar.titleChance) {
+    const pool = TITLES[rar.id];
+    wonTitle = pool[Math.floor(Math.random() * pool.length)];
+  }
+  wonColor = null;
+  if (rar.colorChance > 0 && Math.random() * 100 < rar.colorChance) {
+    const avail = NICK_COLORS.filter(c => !state.unlockedColors.includes(c.color));
+    if (avail.length) wonColor = avail[Math.floor(Math.random() * avail.length)];
+  }
+  phase = 'reward';
+  const inner = $('revealInner');
+  inner.classList.remove('win');
+  inner.style.color = rar.color;
+  $('revealOverlay').style.color = rar.color;
+  $('revealBg').style.setProperty('--c', rar.color);
+  let extras = '';
+  if (wonTitle) extras += `<div class="reveal-sub" style="color:${rar.color}">🏷️ ${wonTitle}</div>`;
+  if (wonColor) extras += `<div class="reveal-sub" style="color:${wonColor.color}">🎨 Цвет: ${wonColor.name}</div>`;
+  inner.innerHTML = `<div class="reveal-icon" style="color:#d97706;font-size:100px">🪙</div><div class="reveal-text small" style="color:#d97706">+${wonCoins.toLocaleString('ru-RU')}</div>${extras}`;
+  $('attempts').innerHTML = ''; $('revealDots').innerHTML = ''; $('chanceInfo').innerHTML = '';
+  $('revealHint').textContent = '👆 Нажми, чтобы забрать';
+}
+
+function applyRewards(rarity, coins, droppedTitle, droppedColor) {
+  state.coins += coins;
+  if (droppedTitle) {
+    const ex = state.inventory.find(t => t.name === droppedTitle);
+    if (ex) ex.count++;
+    else state.inventory.push({ name: droppedTitle, rarityId: rarity.id, count: 1 });
+  }
+  if (droppedColor && !state.unlockedColors.includes(droppedColor.color)) state.unlockedColors.push(droppedColor.color);
+  const card = $('resultCard');
+  card.style.borderColor = rarity.color;
+  card.style.color = rarity.color;
+  card.style.boxShadow = `0 8px 30px ${rarity.color}44`;
+  card.innerHTML = `<div class="rc-icon">${rarity.icon}</div><div class="rc-info"><div class="rc-rarity">${rarity.name}</div><div class="rc-coins">+${coins.toLocaleString('ru-RU')} 🪙</div>${droppedTitle ? `<div class="rc-title" style="color:${rarity.color}">🏷️ ${droppedTitle}</div>` : ''}${droppedColor ? `<div class="rc-color">🎨 Цвет: ${droppedColor.name}</div>` : ''}</div>`;
+  card.classList.add('show');
+  state.log.unshift({ rarityId: rarity.id, coins, title: droppedTitle, color: !!droppedColor });
+  state.log = state.log.slice(0, 30);
+  renderAll(); renderColors(); saveState();
+}
+
+function hideReveal() {
+  $('revealOverlay').classList.remove('show');
+  $('revealOverlay').classList.remove('locked');
+  $('revealInner').innerHTML = '';
+  $('revealInner').classList.remove('win');
+  $('attempts').innerHTML = ''; $('revealDots').innerHTML = ''; $('chanceInfo').innerHTML = '';
+  phase = 'idle';
+}
+
+/* ============================================================
+   МИНИ-ИГРА "ТОЧНЫЙ УДАР"
+   ============================================================ */
+const DIFFS = {
+  easy:   { name:'Легко',  zone:0.28, speed:0.9, reward:1, cost:10 },
+  medium: { name:'Средне', zone:0.16, speed:1.6, reward:3, cost:10 },
+  hard:   { name:'Сложно', zone:0.08, speed:2.6, reward:5, cost:10 },
+};
+let difficulty = 'medium';
+let game = { playing:false, position:0, direction:1, speed:1, zoneStart:0.42, zoneEnd:0.58, reward:3, lastTime:0, rafId:0 };
+
+function renderDiffButtons() {
+  const row = $('diffRow');
+  row.innerHTML = Object.entries(DIFFS).map(([k, d]) => `<button class="diff-btn ${k === difficulty ? 'active' : ''}" data-diff="${k}" type="button">${d.name}<small>+${d.reward} 🏆</small></button>`).join('');
+  row.querySelectorAll('[data-diff]').forEach(b => b.addEventListener('click', () => setDifficulty(b.dataset.diff)));
+}
+function setDifficulty(key) {
+  if (game.playing) return;
+  difficulty = key;
+  const d = DIFFS[key];
+  const half = d.zone / 2;
+  game.zoneStart = 0.5 - half; game.zoneEnd = 0.5 + half;
+  game.speed = d.speed; game.reward = d.reward;
+  updateZone(); renderDiffButtons();
+  $('gameStatus').textContent = `Сложность: ${d.name} • Зона ${Math.round(d.zone*100)}%`;
+  $('gameStatus').className = 'game-status';
+  $('gameStart').textContent = `Старт (${d.cost} 🪙)`;
+}
+function updateZone() {
+  $('gameZone').style.left = (game.zoneStart * 100) + '%';
+  $('gameZone').style.right = (100 - game.zoneEnd * 100) + '%';
+}
+function updateMarker() { $('gameMarker').style.left = (game.position * 100) + '%'; }
+
+function gameStart() {
+  if (game.playing) return;
+  const d = DIFFS[difficulty];
+  if (state.coins < d.cost) { $('gameStatus').textContent = 'Мало монет!'; $('gameStatus').className = 'game-status lose'; return; }
+  state.coins -= d.cost; renderCurrencies();
+  game.playing = true; game.position = 0; game.direction = 1; game.lastTime = performance.now();
+  $('gameStart').disabled = true; $('gameStop').disabled = false;
+  $('gameStatus').textContent = 'Жми СТОП в зелёной зоне!';
+  $('gameStatus').className = 'game-status';
+  game.rafId = requestAnimationFrame(gameLoop);
+}
+function gameLoop(now) {
+  if (!game.playing) return;
+  const dt = Math.min(50, now - game.lastTime) / 1000;
+  game.lastTime = now;
+  game.position += game.direction * game.speed * dt;
+  if (game.position >= 1) { game.position = 1; game.direction = -1; }
+  if (game.position <= 0) { game.position = 0; game.direction = 1; }
+  updateMarker();
+  game.rafId = requestAnimationFrame(gameLoop);
+}
+function gameStop() {
+  if (!game.playing) return;
+  game.playing = false;
+  cancelAnimationFrame(game.rafId);
+  const inZone = game.position >= game.zoneStart && game.position <= game.zoneEnd;
+  $('gameStart').disabled = false; $('gameStop').disabled = true;
+  if (inZone) {
+    state.cups += game.reward;
+    $('gameStatus').textContent = `🎉 ПОБЕДА! +${game.reward} 🏆`;
+    $('gameStatus').className = 'game-status win';
+  } else {
+    $('gameStatus').textContent = '❌ Мимо! Попробуй ещё';
+    $('gameStatus').className = 'game-status lose';
+  }
+  renderCurrencies(); saveState();
+}
+
+/* ============================================================
+   БИТВА КЛИКОВ
+   ============================================================ */
+const CLICKER_DIFFS = {
+  easy:   { name:'Лёгкий',  botSpeed:4,  reward:2 },
+  medium: { name:'Средний', botSpeed:7,  reward:3 },
+  hard:   { name:'Сложный', botSpeed:11, reward:5 },
+  insane: { name:'Безумный',botSpeed:16, reward:8 },
+};
+let clickerMode = 'bot', clickerDiff = 'medium';
+let clicker = { active:false, timeLeft:10, p1:0, p2:0, phase:'idle', timerId:null, botId:null, botClicks:0 };
+
+function renderClickerDiffs() {
+  const row = $('clickerDiffRow');
+  if (clickerMode === 'pvp') { row.style.display = 'none'; return; }
+  row.style.display = 'flex';
+  row.innerHTML = Object.entries(CLICKER_DIFFS).map(([k, d]) => `<button class="diff-btn ${k === clickerDiff ? 'active' : ''}" data-cdiff="${k}" type="button">${d.name}<small>Бот ~${d.botSpeed}/с</small></button>`).join('');
+  row.querySelectorAll('[data-cdiff]').forEach(b => b.addEventListener('click', () => { clickerDiff = b.dataset.cdiff; renderClickerDiffs(); }));
+}
+document.querySelectorAll('[data-cmode]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    if (clicker.active) return;
+    clickerMode = btn.dataset.cmode;
+    document.querySelectorAll('[data-cmode]').forEach(b => b.classList.toggle('active', b === btn));
+    $('cP2Label').textContent = clickerMode === 'bot' ? 'Бот' : 'Игрок 2';
+    renderClickerDiffs(); resetClicker();
+  });
+});
+function resetClicker() {
+  clicker.active = false; clicker.timeLeft = 10; clicker.p1 = 0; clicker.p2 = 0; clicker.botClicks = 0; clicker.phase = 'idle';
+  clearInterval(clicker.timerId); clearInterval(clicker.botId);
+  $('cP1').textContent = 0; $('cP2').textContent = 0; $('clickerTimer').textContent = '10.0';
+  $('clickBtn').disabled = true; $('clickerStart').disabled = false;
+  $('clickerStatus').textContent = clickerMode === 'bot' ? `Против бота • ${CLICKER_DIFFS[clickerDiff].name}` : 'Хот-сит: сначала Игрок 1, потом Игрок 2';
+  $('clickerStatus').className = 'game-status';
+}
+$('clickerStart').addEventListener('click', () => {
+  if (clicker.active) return;
+  clicker.active = true; clicker.timeLeft = 10; clicker.p1 = 0; clicker.p2 = 0; clicker.botClicks = 0; clicker.phase = 'p1';
+  $('cP1').textContent = 0; $('cP2').textContent = 0;
+  $('clickBtn').disabled = false; $('clickerStart').disabled = true;
+  if (clickerMode === 'bot') {
+    $('clickerStatus').textContent = 'КЛИКАЙ! Бот тоже кликает...';
+    const speed = CLICKER_DIFFS[clickerDiff].botSpeed;
+    clicker.botId = setInterval(() => { clicker.botClicks++; $('cP2').textContent = clicker.botClicks; }, 1000 / speed);
+  } else { $('clickerStatus').textContent = 'Ход Игрока 1 — кликай!'; }
+  $('clickerStatus').className = 'game-status';
+  clicker.timerId = setInterval(() => {
+    clicker.timeLeft -= 0.1;
+    if (clicker.timeLeft <= 0) clicker.timeLeft = 0;
+    $('clickerTimer').textContent = clicker.timeLeft.toFixed(1);
+    if (clicker.timeLeft <= 0) {
+      clearInterval(clicker.timerId);
+      if (clickerMode === 'bot') finishClickerBot();
+      else if (clicker.phase === 'p1') {
+        clicker.phase = 'p2'; clicker.timeLeft = 10;
+        $('cP2').textContent = 0; $('clickBtn').disabled = false;
+        $('clickerStatus').textContent = 'Ход Игрока 2 — кликай!';
+        setTimeout(() => {
+          clicker.timerId = setInterval(() => {
+            clicker.timeLeft -= 0.1;
+            if (clicker.timeLeft <= 0) clicker.timeLeft = 0;
+            $('clickerTimer').textContent = clicker.timeLeft.toFixed(1);
+            if (clicker.timeLeft <= 0) { clearInterval(clicker.timerId); finishClickerPvp(); }
+          }, 100);
+        }, 600);
+      }
+    }
+  }, 100);
+});
+$('clickBtn').addEventListener('click', () => {
+  if (!clicker.active) return;
+  if (clicker.phase === 'p1') { clicker.p1++; $('cP1').textContent = clicker.p1; }
+  else if (clicker.phase === 'p2') { clicker.p2++; $('cP2').textContent = clicker.p2; }
+});
+function finishClickerBot() {
+  clearInterval(clicker.botId);
+  clicker.active = false; $('clickBtn').disabled = true; $('clickerStart').disabled = false; clicker.phase = 'done';
+  const bot = clicker.botClicks, you = clicker.p1, reward = CLICKER_DIFFS[clickerDiff].reward;
+  if (you > bot) {
+    state.cups += reward; state.gems += 1; state.stats.cw++;
+    $('clickerStatus').textContent = `🏆 ПОБЕДА! ${you} : ${bot} • +${reward} 🏆 +1 💎`;
+    $('clickerStatus').className = 'game-status win';
+  } else if (you < bot) {
+    state.stats.cl++;
+    $('clickerStatus').textContent = `😢 Поражение ${you} : ${bot}`;
+    $('clickerStatus').className = 'game-status lose';
+  } else {
+    $('clickerStatus').textContent = `🤝 Ничья ${you} : ${bot}`;
+    $('clickerStatus').className = 'game-status';
+  }
+  renderCurrencies(); renderStats(); saveState();
+}
+function finishClickerPvp() {
+  clicker.active = false; $('clickBtn').disabled = true; $('clickerStart').disabled = false; clicker.phase = 'done';
+  const a = clicker.p1, b = clicker.p2;
+  if (a > b) { $('clickerStatus').textContent = `🏆 Игрок 1 победил ${a} : ${b}`; $('clickerStatus').className = 'game-status win'; state.cups += 2; }
+  else if (b > a) { $('clickerStatus').textContent = `🏆 Игрок 2 победил ${a} : ${b}`; $('clickerStatus').className = 'game-status win'; state.cups += 2; }
+  else { $('clickerStatus').textContent = `🤝 Ничья ${a} : ${b}`; $('clickerStatus').className = 'game-status'; }
+  renderCurrencies(); saveState();
+}
+
+/* ============================================================
+   БИТВА ТИТУЛОВ
+   ============================================================ */
+let tbSelected = null, tbOpponent = null, tbBusy = false;
+
+function renderTitlePicker() {
+  const picker = $('titlePicker');
+  if (!state.inventory.length) {
+    picker.innerHTML = '<div class="empty">Нет титулов — выбей из кейса</div>';
+    $('tbFight').disabled = true;
+    return;
+  }
+  const sorted = [...state.inventory].sort((a, b) => (RARITY_INDEX[b.rarityId]||0) - (RARITY_INDEX[a.rarityId]||0));
+  picker.innerHTML = sorted.map(t => {
+    const r = RARITY_MAP[t.rarityId] || RARITIES[0];
+    return `<div class="title-pick ${tbSelected === t.name ? 'selected' : ''}" data-pick="${t.name}" style="color:${r.color};border-color:${r.color}66">${t.name}</div>`;
+  }).join('');
+  picker.querySelectorAll('[data-pick]').forEach(el => {
+    el.addEventListener('click', () => {
+      if (tbBusy) return;
+      tbSelected = el.dataset.pick;
+      renderTitlePicker(); updateTbPreview();
+    });
+  });
+  $('tbFight').disabled = !tbSelected || tbBusy || state.gems < 2;
+}
+
+function updateTbPreview() {
+  if (!tbSelected) {
+    $('tbP1Title').textContent = 'Выбери титул ниже';
+    $('tbP1Title').style.color = '#94a3b8';
+    $('tbP1Rar').textContent = '';
+    return;
+  }
+  const item = state.inventory.find(t => t.name === tbSelected);
+  if (!item) return;
+  const r = RARITY_MAP[item.rarityId] || RARITIES[0];
+  $('tbP1Title').textContent = tbSelected;
+  $('tbP1Title').style.color = r.color;
+  $('tbP1Rar').textContent = r.name;
+  $('tbP1Rar').style.color = r.color;
+}
+
+$('tbClear').addEventListener('click', () => {
+  if (tbBusy) return;
+  tbSelected = null; tbOpponent = null;
+  renderTitlePicker(); updateTbPreview();
+  $('tbP2Title').textContent = '???'; $('tbP2Title').style.color = '#94a3b8';
+  $('tbP2Rar').textContent = '';
+  $('tbResult').textContent = ''; $('tbResult').className = 'tb-result';
+  $('tbStatus').textContent = 'Выбери свой титул, чтобы начать';
+  $('tbStatus').className = 'game-status';
+});
+
+$('tbFight').addEventListener('click', () => {
+  if (tbBusy || !tbSelected) return;
+  if (state.gems < 2) { showToast('Нужно 2 💎'); return; }
+  state.gems -= 2; renderCurrencies();
+  tbBusy = true;
+  const playerItem = state.inventory.find(t => t.name === tbSelected);
+  const playerRank = RARITY_INDEX[playerItem.rarityId] || 0;
+  const possible = ALL_TITLES.filter(t => {
+    const r = RARITY_INDEX[t.rarityId] || 0;
+    return r >= Math.max(0, playerRank - 1) && r <= Math.min(RARITIES.length - 1, playerRank + 1);
+  });
+  tbOpponent = possible[Math.floor(Math.random() * possible.length)];
+  $('tbP2Title').textContent = '...'; $('tbP2Title').style.color = '#94a3b8';
+  $('tbP2Rar').textContent = '';
+  $('tbResult').textContent = '';
+  $('tbStatus').textContent = '⚔ Соперник выбирает...';
+  $('tbStatus').className = 'game-status';
+  let flips = 0;
+  const fi = setInterval(() => {
+    const rnd = ALL_TITLES[Math.floor(Math.random() * ALL_TITLES.length)];
+    const r = RARITY_MAP[rnd.rarityId] || RARITIES[0];
+    $('tbP2Title').textContent = rnd.name; $('tbP2Title').style.color = r.color;
+    $('tbP2Rar').textContent = r.name; $('tbP2Rar').style.color = r.color;
+    flips++;
+    if (flips >= 12) { clearInterval(fi); finishTbFight(); }
+  }, 90);
+});
+
+function finishTbFight() {
+  const r = RARITY_MAP[tbOpponent.rarityId] || RARITIES[0];
+  $('tbP2Title').textContent = tbOpponent.name; $('tbP2Title').style.color = r.color;
+  $('tbP2Rar').textContent = r.name; $('tbP2Rar').style.color = r.color;
+  const pR = RARITY_INDEX[state.inventory.find(t => t.name === tbSelected).rarityId] || 0;
+  const oR = RARITY_INDEX[tbOpponent.rarityId] || 0;
+  const result = $('tbResult');
+  if (pR > oR) {
+    state.cups += 3; state.gems += 2; state.stats.tw++;
+    result.textContent = '🏆 ПОБЕДА!'; result.className = 'tb-result win';
+    $('tbStatus').textContent = '+3 🏆 +2 💎';
+  } else if (pR < oR) {
+    state.stats.tl++;
+    result.textContent = '💀 Поражение'; result.className = 'tb-result lose';
+    $('tbStatus').textContent = 'Соперник был сильнее';
+  } else {
+    state.gems += 1;
+    result.textContent = '🤝 Ничья'; result.className = 'tb-result draw';
+    $('tbStatus').textContent = 'Равные титулы — возврат 1 💎';
+  }
+  $('tbStatus').className = 'game-status';
+  tbBusy = false;
+  renderCurrencies(); renderStats(); renderTitlePicker(); saveState();
+}
+
+/* ============================================================
+   📦 БИТВА КЕЙСОВ
+   ============================================================ */
+let bcBusy = false;
+
+function updateBcButton() {
+  const bet = Math.max(1, Math.min(500, parseInt($('bcBet').value) || 2));
+  $('bcBet').value = bet;
+  $('bcFight').textContent = `⚔ Открыть (${bet} 💎)`;
+  $('bcFight').disabled = bcBusy;
+}
+$('bcBet').addEventListener('input', updateBcButton);
+$('bcBet').addEventListener('change', updateBcButton);
+
+function bcResetVisual() {
+  const c1 = $('bcP1Case'), c2 = $('bcP2Case');
+  c1.textContent = '🎁'; c2.textContent = '🎁';
+  c1.className = 'bc-case'; c2.className = 'bc-case';
+  c1.style.background = ''; c2.style.background = '';
+  c1.style.boxShadow = ''; c2.style.boxShadow = '';
+  $('bcP1Rar').textContent = '—'; $('bcP1Rar').style.color = '#94a3b8';
+  $('bcP2Rar').textContent = '—'; $('bcP2Rar').style.color = '#94a3b8';
+  $('bcResult').textContent = ''; $('bcResult').className = 'bc-result';
+}
+
+function bcReveal(side, rarity) {
+  const caseEl = side === 1 ? $('bcP1Case') : $('bcP2Case');
+  const rarEl = side === 1 ? $('bcP1Rar') : $('bcP2Rar');
+  caseEl.classList.remove('spin');
+  caseEl.classList.add('reveal');
+  caseEl.textContent = rarity.icon;
+  caseEl.style.background = `linear-gradient(145deg, ${rarity.color}dd, ${rarity.color})`;
+  caseEl.style.boxShadow = `0 8px 28px ${rarity.color}88, inset 0 -6px 14px rgba(0,0,0,.2), inset 0 6px 14px rgba(255,255,255,.25)`;
+  caseEl.style.color = '#fff';
+  rarEl.textContent = rarity.name;
+  rarEl.style.color = rarity.color;
+}
+
+$('bcFight').addEventListener('click', () => {
+  if (bcBusy) return;
+  const bet = Math.max(1, Math.min(500, parseInt($('bcBet').value) || 2));
+  if (state.gems < bet) { showToast('Недостаточно 💎'); return; }
+
+  state.gems -= bet;
+  renderCurrencies();
+  bcBusy = true;
+  $('bcFight').disabled = true;
+
+  bcResetVisual();
+  $('bcP1Case').classList.add('spin');
+  $('bcP2Case').classList.add('spin');
+  $('bcStatus').textContent = '📦 Кейсы открываются...';
+  $('bcStatus').className = 'game-status';
+
+  const r1 = rollRarity();
+  const r2 = rollRarity();
+
+  // Игрок
+  setTimeout(() => { bcReveal(1, r1); }, 900);
+  // Соперник
+  setTimeout(() => { bcReveal(2, r2); }, 1700);
+
+  // Результат
+  setTimeout(() => {
+    const i1 = RARITY_INDEX[r1.id];
+    const i2 = RARITY_INDEX[r2.id];
+    const result = $('bcResult');
+
+    if (i1 > i2) {
+      const win = bet * 2;
+      state.gems += win;
+      state.cups += Math.max(1, Math.round(bet / 2));
+      state.stats.bcw++;
+      result.textContent = `🏆 ПОБЕДА! +${win} 💎 +${Math.max(1, Math.round(bet/2))} 🏆`;
+      result.className = 'bc-result win';
+      $('bcStatus').textContent = 'Твоя редкость выше!';
+    } else if (i1 < i2) {
+      state.stats.bcl++;
+      result.textContent = `💀 Поражение −${bet} 💎`;
+      result.className = 'bc-result lose';
+      $('bcStatus').textContent = 'Соперник выбил редкость выше';
+    } else {
+      state.gems += bet;
+      result.textContent = `🤝 Ничья — возврат ${bet} 💎`;
+      result.className = 'bc-result draw';
+      $('bcStatus').textContent = 'Одинаковая редкость';
+    }
+    $('bcStatus').className = 'game-status';
+
+    renderCurrencies(); renderStats(); saveState();
+    bcBusy = false;
+    $('bcFight').disabled = false;
+    updateBcButton();
+  }, 2600);
+});
+
+/* ОБМЕН */
+$('exCups').addEventListener('click', () => {
+  if (state.cups < state.cupsRate) return;
+  state.cups -= state.cupsRate; state.gems += 1;
+  renderCurrencies(); saveState();
+});
+$('exCoins').addEventListener('click', () => {
+  if (state.coins < state.coinsRate) return;
+  state.coins -= state.coinsRate; state.gems += 1;
+  renderCurrencies(); saveState();
+});
+$('exCupsExp').addEventListener('click', () => {
+  if (state.cups < 5) return;
+  state.cups -= 5; state.gems += 1;
+  renderCurrencies(); saveState();
+});
+
+/* ПРОФИЛЬ */
+$('saveNick').addEventListener('click', () => {
+  const v = $('inNick').value.trim();
+  if (v.length < 2 || v.length > 16) { showToast('Ник 2-16 символов'); return; }
+  state.nickname = v;
+  renderNick(); renderStats(); saveState();
+  showToast('Ник сохранён!');
+});
+
+/* ============================================================
+   АДМИНКА
+   ============================================================ */
+function openAdmin() { $('adminBack').classList.add('show'); renderAdminInputs(); renderGiveTitle(); }
+function closeAdmin() { $('adminBack').classList.remove('show'); }
+
+function renderAdminInputs() {
+  const box = $('chanceInputs');
+  box.innerHTML = RARITIES.slice(0, -1).map((r, i) => `
+    <div class="admin-input">
+      <label>${r.name} → ${RARITIES[i+1].name}</label>
+      <input type="number" min="0" max="100" step="0.1" data-chance="${i}" value="${((state.upgradeChances[i]||0) * 100).toFixed(1)}">
+      <span style="font-size:12px;font-weight:800;color:#94a3b8">%</span>
+    </div>`).join('');
+  $('inCasePrice').value = state.casePrice;
+  $('inCupsRate').value = state.cupsRate;
+  $('inCoinsRate').value = state.coinsRate;
+  box.querySelectorAll('input[data-chance]').forEach(inp => {
+    inp.addEventListener('change', () => {
+      const i = +inp.dataset.chance;
+      let v = parseFloat(inp.value) || 0;
+      v = Math.max(0, Math.min(100, v));
+      state.upgradeChances[i] = v / 100;
+      renderChances(); saveState();
+    });
+  });
+}
+
+function renderGiveTitle() {
+  const row = $('giveTitleRow');
+  row.innerHTML = ALL_TITLES.map(t => {
+    const r = RARITY_MAP[t.rarityId] || RARITIES[0];
+    return `<button class="admin-btn2" data-give-title="${t.name}" data-rarity="${t.rarityId}" style="color:${r.color}" type="button">${t.name}</button>`;
+  }).join('');
+  row.querySelectorAll('[data-give-title]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const name = btn.dataset.giveTitle, rarityId = btn.dataset.rarity;
+      const ex = state.inventory.find(x => x.name === name);
+      if (ex) ex.count++;
+      else state.inventory.push({ name, rarityId, count: 1 });
+      renderAll(); renderTitlePicker(); saveState();
+      showToast('Выдан: ' + name);
+    });
+  });
+}
+
+document.querySelectorAll('[data-give]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const [type, amount] = btn.dataset.give.split(':');
+    state[type] = (state[type] || 0) + (+amount);
+    renderCurrencies(); saveState();
+    showToast(`+${amount} ${type}`);
+  });
+});
+
+$('unlockAllColors').addEventListener('click', () => {
+  state.unlockedColors = NICK_COLORS.map(c => c.color);
+  renderColors(); saveState();
+  showToast('Все цвета открыты!');
+});
+
+$('inCasePrice').addEventListener('change', e => { state.casePrice = Math.max(0, +e.target.value || 0); renderCurrencies(); saveState(); });
+$('inCupsRate').addEventListener('change', e => { state.cupsRate = Math.max(1, +e.target.value || 1); renderCurrencies(); saveState(); });
+$('inCoinsRate').addEventListener('change', e => { state.coinsRate = Math.max(1, +e.target.value || 1); renderCurrencies(); saveState(); });
+
+$('resetAll').addEventListener('click', () => {
+  if (!confirm('Точно сбросить ВЕСЬ прогресс?')) return;
+  const keepNick = state.nickname;
+  state = cloneState(DEFAULT_STATE);
+  state.nickname = keepNick;
+  setDifficulty(difficulty);
+  renderAll(); renderChances(); renderColors(); renderTitlePicker();
+  saveState();
+});
+
+$('adminBtn').addEventListener('click', openAdmin);
+$('closeAdmin').addEventListener('click', closeAdmin);
+$('adminBack').addEventListener('click', e => { if (e.target === $('adminBack')) closeAdmin(); });
+
+/* ОБЩИЕ СОБЫТИЯ */
+$('openBtn').addEventListener('click', openCase);
+$('revealOverlay').addEventListener('click', advanceReveal);
+document.addEventListener('keydown', e => {
+  if ($('revealOverlay').classList.contains('show') && (e.key === ' ' || e.key === 'Enter')) {
+    e.preventDefault(); advanceReveal();
+  }
+});
+$('gameStart').addEventListener('click', gameStart);
+$('gameStop').addEventListener('click', gameStop);
+$('authSubmit').addEventListener('click', doAuth);
+$('authUser').addEventListener('keydown', e => { if (e.key === 'Enter') $('authPass').focus(); });
+$('authPass').addEventListener('keydown', e => { if (e.key === 'Enter') doAuth(); });
+
+/* ============================================================
+   АВТОВХОД
+   ============================================================ */
+(function init() {
+  try {
+    const session = safeGet(SESSION_KEY);
+    const users = loadUsers();
+    if (session && users[session] && users[session].state) {
+      startSession(session, users[session].state);
+    } else {
+      $('authScreen').classList.remove('hidden');
+      $('mainApp').classList.add('hidden');
+      setTimeout(() => { try { $('authUser').focus(); } catch(e){} }, 100);
+    }
+  } catch(e) {
+    console.error(e);
+    $('authScreen').classList.remove('hidden');
+    $('mainApp').classList.add('hidden');
+  }
+  updateBcButton();
+})();
+</script>
+</body>
+</html>
